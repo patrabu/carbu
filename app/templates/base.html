@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Carbu Web</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="/static/css/bootstrap.min.css" rel="stylesheet" media="screen">
+  <script src="/static/js/jquery-1.10.2.min.js"></script>
+  <script src="/static/js/bootstrap.min.js"></script>
+  <script src="/static/js/knockout-3.1.0.min.js"></script>
+</head>
+<body>
+  <div class="navbar">
+    <div class="navbar-inner">
+      <a class="brand" href="#">Carbu Web</a>
+    </div>
+  </div>
+  <div id="main" class="container">
+    {% block content %}{% endblock %}
+  </div>
+  <script type="text/javascript">
+    
+    function RefillsViewModel() {
+      var self = this;
+      self.refillsURI = 'http://localhost:5000/carbu/api/v1.0/refills';
+      self.username = "patrick";
+      self.password = "python";
+      
+      self.refills = ko.observableArray();
+      
+      self.refills([
+        {
+          datetime: ko.observable('2014-03-08 18:00:00');
+          mileage: ko.observable('154622'),
+          price: ko.observable('35.24'),
+          quantity: ko.observable('28.14')
+        },
+        {
+          datetime: ko.observable('2014-03-10 07:50:00');
+          mileage: ko.observable('154891'),
+          price: ko.observable('33.00'),
+          quantity: ko.observable('27.65')
+        }
+      ]);
+      
+      self.ajax = function(uri, method, data) {
+        var request = {
+          url: uri,
+          type: method,
+          contentType: "application/json",
+          accepts: "application/json",
+          cache: false,
+          dataType: 'json',
+          data: JSON.stringify(data),
+          beforeSend: function (xhr) {
+            xhr.setRequestHeader("Authorization",
+              "Basic " + btoa(self.username + ":" + self.password));
+          },
+          error: function(jqXHR) {
+            console.log("ajax error " + jqXHR.status);
+          }
+        };
+        return $.ajax(request);
+      }
+    
+      self.beginAdd = function() {
+        alert("Add");
+      }
+      
+      self.beginEdit = function(refill) {
+        alert("Edit: " + refill.datetime());
+      }
+      
+      self.remove = function(refill) {
+        alert("Remove: " + refill.datetime());
+      }
+    }
+    
+    self.ajax(self.refillsURI, 'GET').done(function(data) {
+      for (var i = 0; i < data.refills.length; i++) {
+        self.refills.push({
+            uri: ko.observable(data.refills[i].uri),
+            datetime: ko.observable(data.refills[i].datetime),
+            mileage: ko.observable(data.refills[i].mileage),
+            quantity: ko.observable(data.refills[i].quantity),
+            price: ko.observable(data.refills[i].price),
+        });
+      }
+    });
+    
+    ko.applyBindings(new RefillsViewModel(), $('#main')[0]);
+  </script>
+</body>
+</html>
