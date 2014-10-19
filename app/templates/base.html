@@ -27,21 +27,6 @@
       
       self.refills = ko.observableArray();
       
-      self.refills([
-        {
-          datetime: ko.observable('2014-03-08 18:00:00');
-          mileage: ko.observable('154622'),
-          price: ko.observable('35.24'),
-          quantity: ko.observable('28.14')
-        },
-        {
-          datetime: ko.observable('2014-03-10 07:50:00');
-          mileage: ko.observable('154891'),
-          price: ko.observable('33.00'),
-          quantity: ko.observable('27.65')
-        }
-      ]);
-      
       self.ajax = function(uri, method, data) {
         var request = {
           url: uri,
