@@ -1,0 +1,11 @@
+CACHE MANIFEST
+# Version 0.1a
+
+/
+/static/js/jquery-2.1.1.min.js
+/static/js/bootstrap.min.js
+/static/js/knockout-3.2.0.js
+/static/css/bootstrap.min.css
+
+NETWORK:
+/api
