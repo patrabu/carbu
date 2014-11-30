@@ -2,16 +2,20 @@
 # -*- coding: utf-8 -*
 
 from datetime import datetime
-from flask import Flask, jsonify, abort, make_response, request, g, url_for, render_template
+from flask import jsonify, abort, make_response, request
+from flask import g, url_for, render_template
 from app import app, db, auth
 from .models import User, Car, Refill
 from config import DATETIME_FMT
+
 
 def parse_ymd_hms(s):
     ymd, hms = s.split(' ')
     year_s, month_s, day_s = ymd.split('-')
     hour_s, minute_s, second_s = hms.split(':')
-    return datetime(int(year_s), int(month_s), int(day_s), int(hour_s), int(minute_s), int(second_s))
+    return datetime(int(year_s), int(month_s), int(day_s),
+                    int(hour_s), int(minute_s), int(second_s))
+
 
 @auth.verify_password
 def verify_pawwsord(username_or_token, password):
@@ -19,24 +23,27 @@ def verify_pawwsord(username_or_token, password):
     user = User.verify_auth_token(username_or_token)
     if not user:
         # Try to authenticate with username
-        user = User.query.filter_by(username = username_or_token).first()
+        user = User.query.filter_by(username=username_or_token).first()
         if not user or not user.verify_password(password):
             return False
     g.user = user
     return True
 
+
 @app.errorhandler(404)
 def not_found(error):
-    return make_response(jsonify( { 'error': 'Not found' } ), 404)
+    return make_response(jsonify({'error': 'Not found'}), 404)
 
-@app.route('/', methods = ['GET', 'POST'])
-@app.route('/index', methods = ['GET', 'POST'])
+
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
 def index():
     app.logger.debug("Show index page")
     return render_template("index.html")
 
-@app.route('/carbu/api/v1.0/refills', methods = ['GET'])
-#@auth.login_required
+
+@app.route('/carbu/api/v1.0/refills', methods=['GET'])
+# @auth.login_required
 def get_refills():
     """Get the refills."""
     app.logger.debug('Get refills.')
@@ -55,10 +62,11 @@ def get_refills():
         new_refill = make_public_refill(refill)
         refills.append(new_refill)
 
-    return jsonify( refills=refills )
+    return jsonify(refills=refills)
 
-@app.route('/carbu/api/v1.0/refills/<int:refill_id>', methods = ['GET'])
-#@auth.login_required
+
+@app.route('/carbu/api/v1.0/refills/<int:refill_id>', methods=['GET'])
+# @auth.login_required
 def get_refill(refill_id):
     """Get the refill pointed by the id in parameter."""
     app.logger.debug('Get refill id=%s', refill_id)
@@ -66,10 +74,11 @@ def get_refill(refill_id):
     if refill is None:
         abort(404)
 
-    return jsonify( refill = refill.serialize )
+    return jsonify(refill=refill.serialize)
 
-@app.route('/carbu/api/v1.0/refills', methods = ['POST'])
-#@auth.login_required
+
+@app.route('/carbu/api/v1.0/refills', methods=['POST'])
+# @auth.login_required
 def create_refill():
     """Create a refill object."""
     app.logger.debug('Create refill.')
@@ -104,25 +113,26 @@ def create_refill():
         app.logger.debug("No mileage")
         abort(400)
 
-    refill = Refill(car_id = car_id,
-        datetime = dt,
-        mileage = mileage,
-        price = price,
-        quantity = quantity)
+    refill = Refill(car_id=car_id,
+                    datetime=dt,
+                    mileage=mileage,
+                    price=price,
+                    quantity=quantity)
 
     db.session.add(refill)
     db.session.commit()
 
-    return jsonify( { 'id': refill.id,
-        'car_id': refill.car_id,
-        'datetime': refill.datetime,
-        'mileage': refill.mileage,
-        'quantity': refill.quantity,
-        'price': refill.price,
-        } ), 201
+    return jsonify({'id': refill.id,
+                    'car_id': refill.car_id,
+                    'datetime': refill.datetime,
+                    'mileage': refill.mileage,
+                    'quantity': refill.quantity,
+                    'price': refill.price,
+                    }), 201
 
-@app.route('/carbu/api/v1.0/refills/<int:refill_id>', methods = ['PUT'])
-#@auth.login_required
+
+@app.route('/carbu/api/v1.0/refills/<int:refill_id>', methods=['PUT'])
+# @auth.login_required
 def update_refill(refill_id):
     """Update the refill with the id in parameter."""
     app.logger.debug('Update refill id=%s.', refill_id)
@@ -148,7 +158,7 @@ def update_refill(refill_id):
     else:
         car_id = int(car_id)
         app.logger.debug('Car id =%s', car_id)
-        car  = Car.query.get(car_id)
+        car = Car.query.get(car_id)
         if not car:
             app.logger.error('Car not found for id %s', car_id)
             abort(400)
@@ -189,7 +199,8 @@ def update_refill(refill_id):
         if mileage < 0:
             app.logger.error('Mileage %s negative !', mileage)
 
-    app.logger.debug('Update refill.[ %s %s %s %s %s ]', car_id, dt, mileage, price, quantity)
+    app.logger.debug('Update refill.[ %s %s %s %s %s ]',
+                     car_id, dt, mileage, price, quantity)
     refill.car = car
     refill.datetime = dt
     refill.mileage = mileage
@@ -198,9 +209,10 @@ def update_refill(refill_id):
 
     db.session.add(refill)
     db.session.commit()
-    return jsonify( { 'refill': make_public_refill(refill)} )
+    return jsonify({'refill': make_public_refill(refill)})
 
-@app.route('/carbu/api/v1.0/refills/<int:refill_id>', methods = ['DELETE'])
+
+@app.route('/carbu/api/v1.0/refills/<int:refill_id>', methods=['DELETE'])
 def delete_refill(refill_id):
     """Delete the refill with the id in parameter."""
     app.logger.debug('Delete refill id=%s.', refill_id)
@@ -212,12 +224,14 @@ def delete_refill(refill_id):
 
     db.session.delete(refill)
     db.session.commit()
-    return jsonify( { 'result': True} )
+    return jsonify({'result': True})
+
 
 def make_public_refill(refill):
     """Replace the id of a refill with an uri to provide direct access."""
     new_refill = {}
-    new_refill['uri'] = url_for('get_refill', refill_id = refill.id, _external = True)
+    new_refill['uri'] = url_for('get_refill', refill_id=refill.id,
+                                _external=True)
     new_refill['car_id'] = refill.car_id
     new_refill['mileage'] = refill.mileage
     new_refill['quantity'] = refill.quantity
@@ -226,34 +240,41 @@ def make_public_refill(refill):
     return new_refill
 
 
-@app.route('/carbu/api/v1.0/cars', methods = ['GET'])
-#@auth.login_required
+@app.route('/carbu/api/v1.0/cars', methods=['GET'])
+# @auth.login_required
 def get_cars():
     """Get the cars."""
     cars = Car.query.all()
     car_cols = ['id', 'name', 'description']
-    return jsonify( { 'cars': [{col: getattr(d, col) for col in car_cols} for d in cars]})
+    return jsonify({'cars': [{col: getattr(d, col) for col in car_cols}
+                             for d in cars]})
 
-@app.route('/carbu/api/v1.0/cars/<int:car_id>', methods = ['GET'])
-#@auth.login_required
+
+@app.route('/carbu/api/v1.0/cars/<int:car_id>', methods=['GET'])
+# @auth.login_required
 def get_car(car_id):
     """Get the car pointed by the id in parameter."""
     car = Car.query.get(car_id)
     if not car:
         abort(400)
-    return jsonify( { 'id': car.id, 'name': car.name, 'description': car.description} )
+    return jsonify({'id': car.id,
+                    'name': car.name,
+                    'description': car.description})
+
 
 def make_public_car(car):
     """Replace the id of a car with an uri to provide direct access."""
     new_car = {}
     for field in car:
         if field == 'id':
-            new_car['uri'] = url_for('get_car', car_id = car['id'], _external = True)
+            new_car['uri'] = url_for('get_car', car_id=car['id'],
+                                     _external=True)
         else:
             new_car[field] = car[field]
     return new_car
 
-@app.route('/carbu/api/v1.0/users', methods = ['POST'])
+
+@app.route('/carbu/api/v1.0/users', methods=['POST'])
 def new_user():
     """Create a user."""
     if not request.json:
@@ -261,25 +282,30 @@ def new_user():
     username = request.json.get('username')
     password = request.json.get('password')
     if username is None and password is None:
-        abort(400) # missing arguments
-    if User.query.filter_by(username = username).first() is not None:
-        abort(400) # Duplicate user
+        abort(400)  # missing arguments
+    if User.query.filter_by(username=username).first() is not None:
+        abort(400)  # Duplicate user
 
-    user = User(username = username)
+    user = User(username=username)
     user.hash_password(password)
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({ 'username': user.username }), 201, {'Location': url_for('get_user', user_id = user.id, _external = True) }
+    return jsonify(
+        {'username': user.username}), 201, {'Location':
+                                            url_for('get_user',
+                                                    user_id=user.id,
+                                                    _external=True)}
 
-@app.route('/carbu/api/v1.0/users/<int:user_id>', methods = ['GET'])
+
+@app.route('/carbu/api/v1.0/users/<int:user_id>', methods=['GET'])
 def get_user(user_id):
     """Get the user pointed by the id in parameter."""
     user = User.query.get(user_id)
     if not user:
         app.logger.error("Invalid user id %s requested", user_id)
         abort(400)
-    return jsonify({ 'username': user.username })
+    return jsonify({'username': user.username})
 
 
 @app.route('/carbu/api/v1.0/token')
@@ -287,4 +313,4 @@ def get_user(user_id):
 def get_auth_token():
     """Get the token generated for the user."""
     token = g.user.generate_auth_token()
-    return jsonify({ 'token': token.decode('ascii') })
+    return jsonify({'token': token.decode('ascii')})
