@@ -37,4 +37,4 @@ if not app.debug:
     app.logger.addHandler(file_handler)
     app.logger.info('carbu-api startup...')
 
-# from app import views, models
+from . import views, models

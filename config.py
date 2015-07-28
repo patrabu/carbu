@@ -11,6 +11,7 @@ SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 DATETIME_FMT = '%Y-%m-%d %H:%M:%S'
 CRSF_ENABLED = True
 SECRET_KEY = 'tu-ne-devineras-jamais'
+LAST_REFILLS = 50
 
 # Mail server settings
 MAIL_SERVER = 'localhost'
